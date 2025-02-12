@@ -15,13 +15,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.worldine.quiz.dataclass.SpotifyTrackItem
+import androidx.compose.ui.graphics.BlurEffect
+import androidx.compose.ui.graphics.graphicsLayer
 
 @Composable
 fun QuizScreen(questions: List<SpotifyTrackItem>, onFinishButtonPushed: (Int, Int) -> Unit) {
     var questionProgress by remember { mutableStateOf(0) }
     var userAnswer by remember { mutableStateOf(TextFieldValue("")) }
     var score by remember { mutableStateOf(0) }
-
+    var remainingLives by remember { mutableStateOf(3) }
+    var questionFinished by remember { mutableStateOf(false) }
+    val initialBlur = 60f
+    val blurRadius = remember { mutableStateOf(initialBlur) }
+    var headerText by remember { mutableStateOf("Vies restantes : $remainingLives") }
     val currentQuestion = questions[questionProgress]
 
     Column(
@@ -29,6 +35,12 @@ fun QuizScreen(questions: List<SpotifyTrackItem>, onFinishButtonPushed: (Int, In
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Text(
+            text = headerText,
+            fontSize = 20.sp,
+            color = MaterialTheme.colors.primary,
+            modifier = Modifier.padding(bottom = 10.dp)
+        )
         Card(
             shape = RoundedCornerShape(5.dp),
             modifier = Modifier.padding(60.dp)
@@ -39,20 +51,20 @@ fun QuizScreen(questions: List<SpotifyTrackItem>, onFinishButtonPushed: (Int, In
             ) {
                 AsyncImage(
                     model = currentQuestion.track.album.images.firstOrNull()?.url ?: "",
-                    contentDescription = "Image test",
-                    modifier = Modifier.size(200.dp),
-                    onState = { state ->
-                        when (state) {
-                            is coil3.compose.AsyncImagePainter.State.Loading -> println("⏳ Image en cours de chargement...")
-                            is coil3.compose.AsyncImagePainter.State.Success -> println("✅ Image chargée avec succès !")
-                            is coil3.compose.AsyncImagePainter.State.Error -> println("❌ Erreur Coil : ${state.result.throwable.message}")
-                            else -> {}
+                    contentDescription = "Image de l'album",
+                    modifier = Modifier
+                        .padding(20.dp)
+                        .graphicsLayer {
+                            renderEffect = BlurEffect(
+                                radiusX = blurRadius.value,
+                                radiusY = blurRadius.value
+                            )
+                            clip = true
                         }
-                    }
                 )
                 Text(
-                    modifier = Modifier.padding(all = 10.dp),
-                    text = "Quel est cette album ?",
+                    modifier = Modifier.padding(10.dp),
+                    text = "Quel est cet album ?",
                     fontSize = 25.sp,
                     textAlign = TextAlign.Center
                 )
@@ -63,7 +75,7 @@ fun QuizScreen(questions: List<SpotifyTrackItem>, onFinishButtonPushed: (Int, In
             value = userAnswer,
             onValueChange = { userAnswer = it },
             label = { Text("Tape ta réponse ici") },
-            placeholder = { Text(currentQuestion.track.name, color = Color.Gray) }, // Pour tester l'API
+            placeholder = { Text(currentQuestion.track.album.name, color = Color.Gray) },
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth(0.8f)
@@ -73,20 +85,39 @@ fun QuizScreen(questions: List<SpotifyTrackItem>, onFinishButtonPushed: (Int, In
         Button(
             modifier = Modifier.padding(top = 16.dp),
             onClick = {
-                if (userAnswer.text.equals(currentQuestion.track.name, ignoreCase = true)) {
-                    score++
-                }
-                if (questionProgress < questions.size - 1) {
-                    questionProgress++
-                    userAnswer = TextFieldValue("")
+                if (questionFinished) {
+                    if (questionProgress >= questions.size - 1) {
+                        onFinishButtonPushed(score, questions.size)
+                    } else {
+                        questionProgress++
+                        userAnswer = TextFieldValue("")
+                        remainingLives = 3
+                        blurRadius.value = initialBlur
+                        headerText = "Vies restantes : $remainingLives"
+                        questionFinished = false
+                    }
                 } else {
-                    onFinishButtonPushed(score, questions.size)
+                    if (userAnswer.text.equals(currentQuestion.track.album.name, ignoreCase = true)) {
+                        score++
+                        headerText = "Bonne réponse !"
+                        questionFinished = true
+                    } else {
+                        remainingLives--
+                        if (remainingLives > 0) {
+                            headerText = "Vies restantes : $remainingLives"
+                            blurRadius.value = (blurRadius.value - (initialBlur / 3)).coerceAtLeast(0f)
+                        } else {
+                            headerText = "La bonne réponse était : ${currentQuestion.track.album.name}"
+                            blurRadius.value = 0f
+                            questionFinished = true
+                        }
+                    }
                 }
             }
         ) {
             Icon(
                 Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = "Next",
+                contentDescription = "Suivant",
                 Modifier.padding(end = 15.dp)
             )
             Text("Suivant")
@@ -95,8 +126,7 @@ fun QuizScreen(questions: List<SpotifyTrackItem>, onFinishButtonPushed: (Int, In
         LinearProgressIndicator(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(10.dp)
-                .padding(top = 20.dp),
+                .height(8.dp),
             progress = (questionProgress + 1).toFloat() / questions.size
         )
     }
