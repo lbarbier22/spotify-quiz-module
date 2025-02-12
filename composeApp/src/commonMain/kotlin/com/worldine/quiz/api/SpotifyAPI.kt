@@ -2,18 +2,42 @@ package com.worldine.quiz.api
 
 import com.worldine.quiz.dataclass.SpotifyPlaylistResponse
 import com.worldine.quiz.dataclass.SpotifyTrack
-import com.worldine.quiz.dataclass.SpotifyTrackItem
 import io.ktor.client.*
-import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
-class SpotifyApi(private val token: String) {
+suspend fun getAccessToken(clientId: String, clientSecret: String): String? {
+    return try {
+        val client = HttpClient()
+
+        val response: HttpResponse = client.post("https://accounts.spotify.com/api/token") {
+            header(HttpHeaders.ContentType, ContentType.Application.FormUrlEncoded)
+            setBody("grant_type=client_credentials&client_id=$clientId&client_secret=$clientSecret")
+        }
+
+        val jsonResponse = response.bodyAsText()
+        val jsonElement = Json.parseToJsonElement(jsonResponse)
+
+        val accessToken = jsonElement.jsonObject["access_token"]?.jsonPrimitive?.content
+
+        accessToken
+    } catch (e: Exception) {
+        println("Erreur lors de l'obtention du token Spotify: ${e.message}")
+        null
+    }
+}
+
+class SpotifyApi {
     private val client = HttpClient()
+    private var token: String? = null
+
+    suspend fun initialize(clientId: String, clientSecret: String) {
+        token = getAccessToken(clientId, clientSecret)
+    }
 
     suspend fun getPlaylistTracks(playlistId: String): List<SpotifyTrack> {
         return try {
