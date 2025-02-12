@@ -1,46 +1,31 @@
 package com.worldline.quiz
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
-import androidx.compose.material.Card
-import androidx.compose.material.Icon
-import androidx.compose.material.LinearProgressIndicator
-import androidx.compose.material.RadioButton
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import com.worldine.quiz.dataclass.Question
-import org.jetbrains.compose.resources.painterResource
-import quiz.composeapp.generated.resources.Res
-import quiz.composeapp.generated.resources.amour
 
 @Composable
-fun QuestionScreen(questions: List<Question>, onFinishButtonPushed: (Int,Int) -> Unit) {
+fun QuestionScreen(questions: List<Question>, onFinishButtonPushed: (Int, Int) -> Unit) {
     var questionProgress by remember { mutableStateOf(0) }
-    var selectedAnswer by remember { mutableStateOf(1) }
+    var userAnswer by remember { mutableStateOf(TextFieldValue("")) }
     var score by remember { mutableStateOf(0) }
 
+    val currentQuestion = questions[questionProgress]
+
     Column(
-        modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+        modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -52,63 +37,69 @@ fun QuestionScreen(questions: List<Question>, onFinishButtonPushed: (Int,Int) ->
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(horizontal = 10.dp)
             ) {
-                Image(
-                    painter = painterResource(Res.drawable.amour),
-                    contentDescription = "Image de l'album"
+                AsyncImage(
+                    model = currentQuestion.track.album.images.firstOrNull()?.url ?: "",
+                    contentDescription = "Image test",
+                    modifier = Modifier.size(200.dp),
+                    onState = { state ->
+                        when (state) {
+                            is coil3.compose.AsyncImagePainter.State.Loading -> println("⏳ Image en cours de chargement...")
+                            is coil3.compose.AsyncImagePainter.State.Success -> println("✅ Image chargée avec succès !")
+                            is coil3.compose.AsyncImagePainter.State.Error -> println("❌ Erreur Coil : ${state.result.throwable.message}")
+                            else -> {}
+                        }
+                    }
                 )
                 Text(
                     modifier = Modifier.padding(all = 10.dp),
-                    text = questions[questionProgress].label,
+                    text = "Quel est cette album ?",
                     fontSize = 25.sp,
                     textAlign = TextAlign.Center
                 )
             }
         }
-        Column(modifier = Modifier.selectableGroup()) {
-            questions[questionProgress].answers.forEach { answer ->
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        modifier = Modifier.padding(end = 16.dp),
-                        selected = (selectedAnswer == answer.id),
-                        onClick = { selectedAnswer = answer.id },
-                    )
-                    Text(text = answer.label)
+
+        OutlinedTextField(
+            value = userAnswer,
+            onValueChange = { userAnswer = it },
+            label = { Text("Tape ta réponse ici") },
+            placeholder = { Text(currentQuestion.track.name, color = Color.Gray) }, // Pour tester l'API
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .padding(16.dp)
+        )
+
+        // Bouton pour valider la réponse
+        Button(
+            modifier = Modifier.padding(top = 16.dp),
+            onClick = {
+                if (userAnswer.text.equals(currentQuestion.track.name, ignoreCase = true)) {
+                    score++
+                }
+                if (questionProgress < questions.size - 1) {
+                    questionProgress++
+                    userAnswer = TextFieldValue("")
+                } else {
+                    onFinishButtonPushed(score, questions.size)
                 }
             }
-        }
-        Column(
-            modifier = Modifier.fillMaxHeight(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Bottom
         ) {
-            Button(
-                modifier = Modifier.padding(bottom = 20.dp),
-                onClick = {
-                    if (selectedAnswer == questions[questionProgress].correctAnswerId) {
-                        score++
-                    }
-                    if (questionProgress < questions.size - 1) {
-                        questionProgress++
-                        selectedAnswer = 1
-                    } else {
-                        onFinishButtonPushed(score, questions.size)
-                    }
-                }
-            ) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = "Localized description",
-                    Modifier.padding(end = 15.dp)
-                )
-                Text("Next")
-            }
-            LinearProgressIndicator(
-                modifier = Modifier.fillMaxWidth().height(20.dp),
-                progress = (questionProgress + 1).toFloat() / questions.size
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "Next",
+                Modifier.padding(end = 15.dp)
             )
+            Text("Suivant")
         }
+
+        // Barre de progression
+        LinearProgressIndicator(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(10.dp)
+                .padding(top = 20.dp),
+            progress = (questionProgress + 1).toFloat() / questions.size
+        )
     }
 }

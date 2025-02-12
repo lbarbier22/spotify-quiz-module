@@ -1,9 +1,8 @@
 package com.worldine.quiz.dataclass
 
+import com.worldine.quiz.api.SpotifyTrack
+
 data class Question(
     val id: Int,
-    val label: String,
-    val correctAnswerId: Int,
-    val answers: List<Answer>,
-    val albumImageResId: Int // URL de l’image de l’album
+    val track: SpotifyTrack
 )
