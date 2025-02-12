@@ -38,13 +38,16 @@ data class ScoreRoute(val score: Int, val questionSize: Int)
 @Composable
 @Preview
 fun App(navController: NavHostController = rememberNavController()) {
-    val spotifyApi = remember { SpotifyApi("BQDqwcuXiQOjf4HvAGNd8kQ5TTpYqXys5SJ3GHZHp3NAvSsY5XKSo_fjL2TS6i412NinPjfsD4eL6yImQaFyOOlIDCQB-9IS5TwaPafy0VYMrxoyXQHCwwcObfYLOvOJqp6omPDyn3A") }
+    val spotifyApi = remember { SpotifyApi() }
     var spotifyTrackItem by remember { mutableStateOf(emptyList<SpotifyTrackItem>()) }
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             try {
+
+                spotifyApi.initialize("", "")
+
                 val tracks = spotifyApi.getPlaylistTracks("59WglXRaPqT4rLsuboFGVJ")
                 spotifyTrackItem = tracks.mapIndexed { index, track ->
                     SpotifyTrackItem(
