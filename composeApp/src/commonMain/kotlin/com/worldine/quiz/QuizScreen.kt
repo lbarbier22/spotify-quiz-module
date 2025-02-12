@@ -14,10 +14,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import com.worldine.quiz.dataclass.Question
+import com.worldine.quiz.dataclass.SpotifyTrackItem
 
 @Composable
-fun QuestionScreen(questions: List<Question>, onFinishButtonPushed: (Int, Int) -> Unit) {
+fun QuizScreen(questions: List<SpotifyTrackItem>, onFinishButtonPushed: (Int, Int) -> Unit) {
     var questionProgress by remember { mutableStateOf(0) }
     var userAnswer by remember { mutableStateOf(TextFieldValue("")) }
     var score by remember { mutableStateOf(0) }
@@ -70,7 +70,6 @@ fun QuestionScreen(questions: List<Question>, onFinishButtonPushed: (Int, Int) -
                 .padding(16.dp)
         )
 
-        // Bouton pour valider la réponse
         Button(
             modifier = Modifier.padding(top = 16.dp),
             onClick = {
@@ -93,7 +92,6 @@ fun QuestionScreen(questions: List<Question>, onFinishButtonPushed: (Int, Int) -
             Text("Suivant")
         }
 
-        // Barre de progression
         LinearProgressIndicator(
             modifier = Modifier
                 .fillMaxWidth()

@@ -19,8 +19,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.worldine.quiz.api.SpotifyApi
-import com.worldine.quiz.dataclass.Question
-import com.worldline.quiz.QuestionScreen
+import com.worldine.quiz.dataclass.SpotifyTrackItem
+import com.worldline.quiz.QuizScreen
 import com.worldline.quiz.ScoreScreen
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -38,18 +38,17 @@ data class ScoreRoute(val score: Int, val questionSize: Int)
 @Composable
 @Preview
 fun App(navController: NavHostController = rememberNavController()) {
-    val spotifyApi = remember { SpotifyApi("JVAISDONNERMONTOKENHIHI") }
-    var questions by remember { mutableStateOf(emptyList<Question>()) }
+    val spotifyApi = remember { SpotifyApi("BQDqwcuXiQOjf4HvAGNd8kQ5TTpYqXys5SJ3GHZHp3NAvSsY5XKSo_fjL2TS6i412NinPjfsD4eL6yImQaFyOOlIDCQB-9IS5TwaPafy0VYMrxoyXQHCwwcObfYLOvOJqp6omPDyn3A") }
+    var spotifyTrackItem by remember { mutableStateOf(emptyList<SpotifyTrackItem>()) }
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             try {
                 val tracks = spotifyApi.getPlaylistTracks("59WglXRaPqT4rLsuboFGVJ")
-                questions = tracks.mapIndexed { index, track ->
-                    Question(
-                        id = index,
-                        track = track,
+                spotifyTrackItem = tracks.mapIndexed { index, track ->
+                    SpotifyTrackItem(
+                        track = track
                     )
                 }
             } catch (e: Exception) {
@@ -60,7 +59,7 @@ fun App(navController: NavHostController = rememberNavController()) {
 
 
     MaterialTheme {
-        if (questions.isNotEmpty()) {
+        if (spotifyTrackItem.isNotEmpty()) {
             NavHost(
                 navController = navController,
                 startDestination = WelcomeRoute
@@ -71,8 +70,8 @@ fun App(navController: NavHostController = rememberNavController()) {
                     )
                 }
                 composable<QuizRoute> {
-                    QuestionScreen(
-                        questions = questions,
+                    QuizScreen(
+                        questions = spotifyTrackItem,
                         onFinishButtonPushed = { score, questionSize ->
                             navController.navigate(route = ScoreRoute(score, questionSize))
                         }

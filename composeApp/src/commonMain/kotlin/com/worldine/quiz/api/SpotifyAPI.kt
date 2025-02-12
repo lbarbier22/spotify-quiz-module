@@ -1,5 +1,8 @@
 package com.worldine.quiz.api
 
+import com.worldine.quiz.dataclass.SpotifyPlaylistResponse
+import com.worldine.quiz.dataclass.SpotifyTrack
+import com.worldine.quiz.dataclass.SpotifyTrackItem
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -8,34 +11,6 @@ import io.ktor.http.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-
-@Serializable
-data class SpotifyPlaylistResponse(
-    val href: String,
-    val items: List<SpotifyTrackItem>
-)
-
-@Serializable
-data class SpotifyTrackItem(
-    val track: SpotifyTrack
-)
-
-@Serializable
-data class SpotifyTrack(
-    val name: String,
-    val album: SpotifyAlbum
-)
-
-@Serializable
-data class SpotifyAlbum(
-    val images: List<SpotifyImage>,
-    val name: String
-)
-
-@Serializable
-data class SpotifyImage(
-    val url: String
-)
 
 class SpotifyApi(private val token: String) {
     private val client = HttpClient()
