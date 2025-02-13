@@ -30,6 +30,9 @@ import kotlinx.serialization.Serializable
 object WelcomeRoute
 
 @Serializable
+object PlaylistSearchRoute
+
+@Serializable
 object QuizRoute
 
 @Serializable
@@ -39,65 +42,75 @@ data class ScoreRoute(val score: Int, val questionSize: Int)
 @Preview
 fun App(navController: NavHostController = rememberNavController()) {
     val spotifyApi = remember { SpotifyApi() }
-    var spotifyTrackItem by remember { mutableStateOf(emptyList<SpotifyTrackItem>()) }
+    var quizTracks by remember { mutableStateOf(emptyList<SpotifyTrackItem>()) }
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             try {
-
                 spotifyApi.initialize("", "")
-
-                val tracks = spotifyApi.getPlaylistTracks("1WWjH05502MFoxAtow2GgJ")
-                val selectedTracks = if (tracks.size > 10) {
-                    tracks.shuffled().take(10)
-                } else {
-                    tracks
-                }
-                spotifyTrackItem = selectedTracks.map { track ->
-                    SpotifyTrackItem(track = track)
-                }
             } catch (e: Exception) {
-                println("Erreur lors de la récupération des titres : ${e.message}")
+                println("Erreur lors de l'initialisation de l'API : ${e.message}")
             }
         }
     }
 
-
     MaterialTheme {
-        if (spotifyTrackItem.isNotEmpty()) {
-            NavHost(
-                navController = navController,
-                startDestination = WelcomeRoute
-            ) {
-                composable<WelcomeRoute> {
-                    WelcomeScreen(
-                        onStartButtonPushed = { navController.navigate(route = QuizRoute) }
-                    )
-                }
-                composable<QuizRoute> {
+        NavHost(
+            navController = navController,
+            startDestination = WelcomeRoute
+        ) {
+            composable<WelcomeRoute> {
+                WelcomeScreen(
+                    onStartButtonPushed = { navController.navigate(PlaylistSearchRoute) }
+                )
+            }
+            composable<PlaylistSearchRoute> {
+                PlaylistSearchScreen(
+                    spotifyApi = spotifyApi,
+                    onPlaylistSelected = { playlistId ->
+                        coroutineScope.launch {
+                            try {
+                                val tracks = spotifyApi.getPlaylistTracks(playlistId)
+                                val selectedTracks = if (tracks.size > 10) {
+                                    tracks.shuffled().take(10)
+                                } else {
+                                    tracks
+                                }
+                                quizTracks = selectedTracks.map { track ->
+                                    SpotifyTrackItem(track = track)
+                                }
+                                navController.navigate(QuizRoute)
+                            } catch (e: Exception) {
+                                println("Erreur lors de la récupération des titres : ${e.message}")
+                            }
+                        }
+                    }
+                )
+            }
+            composable<QuizRoute> {
+                if (quizTracks.isNotEmpty()) {
                     QuizScreen(
-                        questions = spotifyTrackItem,
+                        questions = quizTracks,
                         onFinishButtonPushed = { score, questionSize ->
-                            navController.navigate(route = ScoreRoute(score, questionSize))
+                            navController.navigate(ScoreRoute(score, questionSize))
                         }
                     )
-                }
-                composable<ScoreRoute> { backStackEntry ->
-                    val scoreRoute: ScoreRoute = backStackEntry.toRoute<ScoreRoute>()
-                    ScoreScreen(
-                        score = scoreRoute.score,
-                        total = scoreRoute.questionSize,
-                        onResetButtonPushed = { navController.navigate(route = QuizRoute) },
-                        onHomeButtonPushed = { navController.navigate(route = WelcomeRoute) }
-                    )
+                } else {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
                 }
             }
-        } else {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+            composable<ScoreRoute> { backStackEntry ->
+                val scoreRoute: ScoreRoute = backStackEntry.toRoute<ScoreRoute>()
+                ScoreScreen(
+                    score = scoreRoute.score,
+                    total = scoreRoute.questionSize,
+                    onResetButtonPushed = { navController.navigate(QuizRoute) },
+                    onHomeButtonPushed = { navController.navigate(WelcomeRoute) }
+                )
             }
         }
     }
 }
-
