@@ -46,7 +46,7 @@ fun App(navController: NavHostController = rememberNavController()) {
         coroutineScope.launch {
             try {
 
-                spotifyApi.initialize("", "")
+                spotifyApi.initialize("ece01d967d6642069f005d077112f7f9", "c408c84aa31d40b1884a07308e9adb36")
 
                 val tracks = spotifyApi.getPlaylistTracks("1WWjH05502MFoxAtow2GgJ")
                 val selectedTracks = if (tracks.size > 10) {
