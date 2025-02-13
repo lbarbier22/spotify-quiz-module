@@ -49,10 +49,13 @@ fun App(navController: NavHostController = rememberNavController()) {
                 spotifyApi.initialize("", "")
 
                 val tracks = spotifyApi.getPlaylistTracks("59WglXRaPqT4rLsuboFGVJ")
-                spotifyTrackItem = tracks.mapIndexed { index, track ->
-                    SpotifyTrackItem(
-                        track = track
-                    )
+                val selectedTracks = if (tracks.size > 10) {
+                    tracks.shuffled().take(10)
+                } else {
+                    tracks
+                }
+                spotifyTrackItem = selectedTracks.map { track ->
+                    SpotifyTrackItem(track = track)
                 }
             } catch (e: Exception) {
                 println("Erreur lors de la récupération des titres : ${e.message}")
