@@ -16,12 +16,18 @@ data class SpotifyTrackItem(
 @Serializable
 data class SpotifyTrack(
     val name: String,
+    val artists: List<SpotifyArtist>,
     val album: SpotifyAlbum
 )
 
 @Serializable
 data class SpotifyAlbum(
     val images: List<SpotifyImage>,
+    val name: String
+)
+
+@Serializable
+data class SpotifyArtist(
     val name: String
 )
 
