@@ -36,6 +36,9 @@ class SpotifyApi {
     private var token: String? = null
 
     suspend fun initialize(clientId: String, clientSecret: String) {
+        if (clientId.isEmpty() || clientSecret.isEmpty()){
+            throw Exception("Le client-id ou client-secret n'est pas renseigné.")
+        }
         token = getAccessToken(clientId, clientSecret)
     }
 
