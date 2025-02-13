@@ -53,7 +53,7 @@ fun WelcomeScreen(onStartButtonPushed: () -> Unit) {
                 Text(
                     text = "Spotify Quiz",
                     style = MaterialTheme.typography.h3,
-                    fontWeight = FontWeight.ExtraBold, // Rendu plus bold
+                    fontWeight = FontWeight.ExtraBold,
                     color = spotifyGreen,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
@@ -66,9 +66,10 @@ fun WelcomeScreen(onStartButtonPushed: () -> Unit) {
                 Text(
                     text = """
                         • Dix albums floutés apparaissent.
-                        • Tu disposes de 3 vies pour deviner chacun de leur nom.
+                        • Tu disposes de 3 vies pour deviner chacun des artistes.
                         • À chaque mauvaise réponse, l'image se défloute progressivement.
                         • Après 3 erreurs, l'album est révélé.
+                        • A chaque erreur, un indice est révelé
                         
                         Amuse-toi bien !
                     """.trimIndent(),
