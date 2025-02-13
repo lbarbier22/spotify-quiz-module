@@ -48,7 +48,7 @@ fun App(navController: NavHostController = rememberNavController()) {
 
                 spotifyApi.initialize("", "")
 
-                val tracks = spotifyApi.getPlaylistTracks("4utIMdVRcC8HgLjKLIJEBi")
+                val tracks = spotifyApi.getPlaylistTracks("1WWjH05502MFoxAtow2GgJ")
                 val selectedTracks = if (tracks.size > 10) {
                     tracks.shuffled().take(10)
                 } else {
