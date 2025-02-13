@@ -8,26 +8,26 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.BlurEffect
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.worldine.quiz.dataclass.SpotifyTrackItem
-import androidx.compose.ui.graphics.BlurEffect
-import androidx.compose.ui.graphics.graphicsLayer
 
 @Composable
 fun QuizScreen(questions: List<SpotifyTrackItem>, onFinishButtonPushed: (Int, Int) -> Unit) {
     var questionProgress by remember { mutableStateOf(0) }
     var userAnswer by remember { mutableStateOf(TextFieldValue("")) }
     var score by remember { mutableStateOf(0) }
-    var remainingLives by remember { mutableStateOf(3) }
+    var remainingLives by remember { mutableStateOf(4) }
     var questionFinished by remember { mutableStateOf(false) }
     val initialBlur = 60f
     val blurRadius = remember { mutableStateOf(initialBlur) }
     var headerText by remember { mutableStateOf("Vies restantes : $remainingLives") }
+    var hintText by remember { mutableStateOf("") }
     val currentQuestion = questions[questionProgress]
 
     Column(
@@ -39,8 +39,17 @@ fun QuizScreen(questions: List<SpotifyTrackItem>, onFinishButtonPushed: (Int, In
             text = headerText,
             fontSize = 20.sp,
             color = MaterialTheme.colors.primary,
-            modifier = Modifier.padding(bottom = 10.dp)
+            modifier = Modifier.padding(bottom = 4.dp)
         )
+        if (hintText.isNotEmpty()) {
+            Text(
+                text = hintText,
+                fontSize = 16.sp,
+                color = MaterialTheme.colors.secondary,
+                modifier = Modifier.padding(bottom = 10.dp)
+            )
+        }
+
         Card(
             shape = RoundedCornerShape(5.dp),
             modifier = Modifier.padding(60.dp)
@@ -64,7 +73,7 @@ fun QuizScreen(questions: List<SpotifyTrackItem>, onFinishButtonPushed: (Int, In
                 )
                 Text(
                     modifier = Modifier.padding(10.dp),
-                    text = "Quel est cet album ?",
+                    text = "Quel est l'artiste de cet album ?",
                     fontSize = 25.sp,
                     textAlign = TextAlign.Center
                 )
@@ -75,7 +84,7 @@ fun QuizScreen(questions: List<SpotifyTrackItem>, onFinishButtonPushed: (Int, In
             value = userAnswer,
             onValueChange = { userAnswer = it },
             label = { Text("Tape ta réponse ici") },
-            placeholder = { Text(currentQuestion.track.album.name, color = Color.Gray) },
+//            placeholder = { Text(currentQuestion.track.album.name, color = Color.Gray) },
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth(0.8f)
@@ -91,23 +100,42 @@ fun QuizScreen(questions: List<SpotifyTrackItem>, onFinishButtonPushed: (Int, In
                     } else {
                         questionProgress++
                         userAnswer = TextFieldValue("")
-                        remainingLives = 3
+                        remainingLives = 4
                         blurRadius.value = initialBlur
                         headerText = "Vies restantes : $remainingLives"
                         questionFinished = false
+                        hintText = ""
                     }
                 } else {
-                    if (userAnswer.text.equals(currentQuestion.track.album.name, ignoreCase = true)) {
+                    if (userAnswer.text.equals(currentQuestion.track.artists.firstOrNull()?.name ?: "Inconnu")) {
                         score++
                         headerText = "Bonne réponse !"
                         questionFinished = true
+                        hintText = ""
+                        blurRadius.value = 0f
                     } else {
                         remainingLives--
+                        when (remainingLives) {
+                            3 -> {
+                                val firstLetter = currentQuestion.track.artists.firstOrNull()?.name?.firstOrNull()?.toString() ?: ""
+                                hintText = "Indice : Première lettre de l'artiste : $firstLetter"
+                            }
+                            2 -> {
+                                val artist = currentQuestion.track.album.name
+                                hintText = "Indice : Album : $artist"
+                            }
+                            1 -> {
+                                val albumName = currentQuestion.track.artists.firstOrNull()?.name ?: "Inconnu"
+                                val shuffledName = albumName.toList().shuffled().joinToString("")
+                                hintText = "Indice : Lettres mélangées : $shuffledName"
+                            }
+                        }
                         if (remainingLives > 0) {
                             headerText = "Vies restantes : $remainingLives"
-                            blurRadius.value = (blurRadius.value - (initialBlur / 3)).coerceAtLeast(0f)
+                            blurRadius.value = (blurRadius.value - (initialBlur / 4)).coerceAtLeast(0f)
                         } else {
-                            headerText = "La bonne réponse était : ${currentQuestion.track.album.name}"
+                            headerText = "La bonne réponse était : ${currentQuestion.track.artists.firstOrNull()?.name}"
+                            hintText = ""
                             blurRadius.value = 0f
                             questionFinished = true
                         }
