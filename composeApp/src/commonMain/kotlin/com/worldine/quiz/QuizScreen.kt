@@ -30,6 +30,63 @@ fun QuizScreen(questions: List<SpotifyTrackItem>, onFinishButtonPushed: (Int, In
     var hintText by remember { mutableStateOf("") }
     val currentQuestion = questions[questionProgress]
 
+    fun normalize(input: String): String = input.replace("\\s+".toRegex(), "")
+
+    fun resetQuestion() {
+        if (questionProgress >= questions.size - 1) {
+            onFinishButtonPushed(score, questions.size)
+        } else {
+            questionProgress++
+            userAnswer = TextFieldValue("")
+            remainingLives = 4
+            blurRadius.value = initialBlur
+            headerText = "Vies restantes : $remainingLives"
+            questionFinished = false
+            hintText = ""
+        }
+    }
+
+    fun processAnswer() {
+        val userNormalized = normalize(userAnswer.text).lowercase()
+        val correctAnswer = (currentQuestion.track.artists.firstOrNull()?.name ?: "Inconnu")
+        val correctNormalized = normalize(correctAnswer).lowercase()
+
+        if (userNormalized == correctNormalized) {
+            score++
+            headerText = "Bonne réponse !"
+            questionFinished = true
+            hintText = ""
+            blurRadius.value = 0f
+        } else {
+            remainingLives--
+            when (remainingLives) {
+                3 -> {
+                    val firstLetter = currentQuestion.track.artists.firstOrNull()?.name
+                        ?.firstOrNull()?.toString() ?: ""
+                    hintText = "Première lettre de l'artiste : $firstLetter"
+                }
+                2 -> {
+                    val albumName = currentQuestion.track.album.name
+                    hintText = "Le nom de l'album : $albumName"
+                }
+                1 -> {
+                    val artist = currentQuestion.track.artists.firstOrNull()?.name ?: "Inconnu"
+                    val shuffledName = artist.toList().shuffled().joinToString("")
+                    hintText = "Réponse mélangée : $shuffledName"
+                }
+            }
+            if (remainingLives > 0) {
+                headerText = "Vies restantes : $remainingLives"
+                blurRadius.value = (blurRadius.value - (initialBlur / 4)).coerceAtLeast(0f)
+            } else {
+                headerText = "La bonne réponse était : $correctAnswer"
+                hintText = ""
+                blurRadius.value = 0f
+                questionFinished = true
+            }
+        }
+    }
+
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -95,51 +152,9 @@ fun QuizScreen(questions: List<SpotifyTrackItem>, onFinishButtonPushed: (Int, In
             modifier = Modifier.padding(top = 16.dp),
             onClick = {
                 if (questionFinished) {
-                    if (questionProgress >= questions.size - 1) {
-                        onFinishButtonPushed(score, questions.size)
-                    } else {
-                        questionProgress++
-                        userAnswer = TextFieldValue("")
-                        remainingLives = 4
-                        blurRadius.value = initialBlur
-                        headerText = "Vies restantes : $remainingLives"
-                        questionFinished = false
-                        hintText = ""
-                    }
+                    resetQuestion()
                 } else {
-                    if (userAnswer.text.equals(currentQuestion.track.artists.firstOrNull()?.name ?: "Inconnu")) {
-                        score++
-                        headerText = "Bonne réponse !"
-                        questionFinished = true
-                        hintText = ""
-                        blurRadius.value = 0f
-                    } else {
-                        remainingLives--
-                        when (remainingLives) {
-                            3 -> {
-                                val firstLetter = currentQuestion.track.artists.firstOrNull()?.name?.firstOrNull()?.toString() ?: ""
-                                hintText = "Indice : Première lettre de l'artiste : $firstLetter"
-                            }
-                            2 -> {
-                                val artist = currentQuestion.track.album.name
-                                hintText = "Indice : Album : $artist"
-                            }
-                            1 -> {
-                                val albumName = currentQuestion.track.artists.firstOrNull()?.name ?: "Inconnu"
-                                val shuffledName = albumName.toList().shuffled().joinToString("")
-                                hintText = "Indice : Lettres mélangées : $shuffledName"
-                            }
-                        }
-                        if (remainingLives > 0) {
-                            headerText = "Vies restantes : $remainingLives"
-                            blurRadius.value = (blurRadius.value - (initialBlur / 4)).coerceAtLeast(0f)
-                        } else {
-                            headerText = "La bonne réponse était : ${currentQuestion.track.artists.firstOrNull()?.name}"
-                            hintText = ""
-                            blurRadius.value = 0f
-                            questionFinished = true
-                        }
-                    }
+                    processAnswer()
                 }
             }
         ) {
