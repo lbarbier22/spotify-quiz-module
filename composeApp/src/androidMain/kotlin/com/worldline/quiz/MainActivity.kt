@@ -1,4 +1,4 @@
-package com.worldine.quiz
+package com.worldline.quiz
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

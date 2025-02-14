@@ -1,4 +1,4 @@
-package com.worldine.quiz.dataclass
+package com.worldline.quiz.dataclass
 
 import kotlinx.serialization.Serializable
 
