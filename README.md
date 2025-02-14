@@ -1,3 +1,7 @@
+/!/
+
+Afin d'obtenir le client-id et le client-secret, je peux les fournir en pv sur discord.
+
 This is a Kotlin Multiplatform project targeting Android, iOS, Web, Desktop.
 
 * `/composeApp` is for code that will be shared across your Compose Multiplatform applications.
