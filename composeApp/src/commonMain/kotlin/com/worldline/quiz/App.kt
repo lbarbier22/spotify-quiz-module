@@ -1,16 +1,8 @@
-package com.worldine.quiz
+package com.worldline.quiz
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -18,10 +10,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.worldine.quiz.api.SpotifyApi
-import com.worldine.quiz.dataclass.SpotifyTrackItem
-import com.worldline.quiz.QuizScreen
-import com.worldline.quiz.ScoreScreen
+import com.worldline.quiz.api.SpotifyApi
+import com.worldline.quiz.dataclass.SpotifyTrackItem
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlinx.serialization.Serializable
@@ -107,7 +97,7 @@ fun App(navController: NavHostController = rememberNavController()) {
                 ScoreScreen(
                     score = scoreRoute.score,
                     total = scoreRoute.questionSize,
-                    onResetButtonPushed = { navController.navigate(QuizRoute) },
+                    onPlaylistSearchButtonPushed = { navController.navigate(PlaylistSearchRoute) },
                     onHomeButtonPushed = { navController.navigate(WelcomeRoute) }
                 )
             }

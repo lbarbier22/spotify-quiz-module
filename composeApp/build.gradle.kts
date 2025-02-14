@@ -99,11 +99,11 @@ kotlin {
 }
 
 android {
-    namespace = "com.worldine.quiz"
+    namespace = "com.worldline.quiz"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.worldine.quiz"
+        applicationId = "com.worldline.quiz"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
@@ -133,11 +133,11 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "com.worldine.quiz.MainKt"
+        mainClass = "com.worldline.quiz.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.worldine.quiz"
+            packageName = "com.worldline.quiz"
             packageVersion = "1.0.0"
         }
     }

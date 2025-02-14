@@ -1,4 +1,4 @@
-package com.worldine.quiz
+package com.worldline.quiz
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -24,7 +24,6 @@ fun WelcomeScreen(onStartButtonPushed: () -> Unit) {
     val cardColor = Color(0xFF1E1E1E)
     val spotifyGreen = Color(0xFF1DB954)
 
-    // Création d'un dégradé vertical pour le fond
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(
             Color(0xFF512afe),
