@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.delay
 import com.worldline.quiz.dataclass.SpotifyTrackItem
 
 @Composable
@@ -44,8 +45,43 @@ fun QuizScreen(questions: List<SpotifyTrackItem>, onFinishButtonPushed: (Int, In
     var headerText by remember { mutableStateOf("Bonne réponse!") }
     var hintText by remember { mutableStateOf("") }
     val currentQuestion = questions[questionProgress]
+    var timeLeft by remember { mutableStateOf(20) }
 
     fun normalize(input: String): String = input.replace("\\s+".toRegex(), "")
+
+    fun processAnswer(timeout: Boolean = false) {
+        val userNormalized = normalize(userAnswer.text).lowercase()
+        val correctAnswer = (currentQuestion.track.artists.firstOrNull()?.name ?: "Inconnu")
+        val correctNormalized = normalize(correctAnswer).lowercase()
+
+        if (!timeout && userNormalized == correctNormalized) {
+            score++
+            headerText = "Bonne réponse!"
+            questionFinished = true
+            hintText = ""
+            blurRadius.value = 0f
+        } else if (timeout) {
+            headerText = "La bonne réponse était : $correctAnswer"
+            hintText = ""
+            blurRadius.value = 0f
+            questionFinished = true
+        } else {
+            remainingLives--
+            when (remainingLives) {
+                3 -> hintText = "Première lettre de l'artiste : ${correctAnswer.firstOrNull() ?: ""}"
+                2 -> hintText = "Le nom de l'album : ${currentQuestion.track.album.name}"
+                1 -> hintText = "Réponse mélangée : ${correctAnswer.toList().shuffled().joinToString("")}"
+            }
+            if (remainingLives > 0) {
+                blurRadius.value = (blurRadius.value - (initialBlur / 4)).coerceAtLeast(0f)
+            } else {
+                headerText = "La bonne réponse était : $correctAnswer"
+                hintText = ""
+                blurRadius.value = 0f
+                questionFinished = true
+            }
+        }
+    }
 
     fun resetQuestion() {
         if (questionProgress >= questions.size - 1) {
@@ -60,43 +96,14 @@ fun QuizScreen(questions: List<SpotifyTrackItem>, onFinishButtonPushed: (Int, In
         }
     }
 
-    fun processAnswer() {
-        val userNormalized = normalize(userAnswer.text).lowercase()
-        val correctAnswer = (currentQuestion.track.artists.firstOrNull()?.name ?: "Inconnu")
-        val correctNormalized = normalize(correctAnswer).lowercase()
-
-        if (userNormalized == correctNormalized) {
-            score++
-            headerText = "Bonne réponse!"
-            questionFinished = true
-            hintText = ""
-            blurRadius.value = 0f
-        } else {
-            remainingLives--
-            when (remainingLives) {
-                3 -> {
-                    val firstLetter = currentQuestion.track.artists.firstOrNull()?.name
-                        ?.firstOrNull()?.toString() ?: ""
-                    hintText = "Première lettre de l'artiste : $firstLetter"
-                }
-                2 -> {
-                    val albumName = currentQuestion.track.album.name
-                    hintText = "Le nom de l'album : $albumName"
-                }
-                1 -> {
-                    val artist = currentQuestion.track.artists.firstOrNull()?.name ?: "Inconnu"
-                    val shuffledName = artist.toList().shuffled().joinToString("")
-                    hintText = "Réponse mélangée : $shuffledName"
-                }
-            }
-            if (remainingLives > 0) {
-                blurRadius.value = (blurRadius.value - (initialBlur / 4)).coerceAtLeast(0f)
-            } else {
-                headerText = "La bonne réponse était : $correctAnswer"
-                hintText = ""
-                blurRadius.value = 0f
-                questionFinished = true
-            }
+    LaunchedEffect(questionProgress) {
+        timeLeft = 20
+        while (timeLeft > 0 && !questionFinished) {
+            delay(1000L)
+            timeLeft--
+        }
+        if (timeLeft == 0 && !questionFinished) {
+            processAnswer(timeout = true)
         }
     }
 
@@ -116,23 +123,7 @@ fun QuizScreen(questions: List<SpotifyTrackItem>, onFinishButtonPushed: (Int, In
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(24.dp)
             ) {
-                if (!questionFinished) {
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    ) {
-                        repeat(remainingLives) {
-                            Icon(
-                                imageVector = Icons.Filled.Favorite,
-                                contentDescription = "Coeur",
-                                tint = spotifyGreen,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                        }
-                    }
-                } else {
+                if (questionFinished) {
                     Text(
                         text = headerText,
                         fontSize = 20.sp,
@@ -140,6 +131,37 @@ fun QuizScreen(questions: List<SpotifyTrackItem>, onFinishButtonPushed: (Int, In
                         color = spotifyGreen,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            repeat(remainingLives) {
+                                Icon(
+                                    imageVector = Icons.Filled.Favorite,
+                                    contentDescription = "Coeur",
+                                    tint = spotifyGreen,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                            }
+                        }
+
+                        Card(
+                            backgroundColor = Color.Black,
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.padding(4.dp)
+                        ) {
+                            Text(
+                                text = "$timeLeft s",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                modifier = Modifier.padding(8.dp)
+                            )
+                        }
+                    }
                 }
 
                 if (hintText.isNotEmpty()) {
