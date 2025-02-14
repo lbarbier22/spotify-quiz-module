@@ -63,6 +63,8 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.ktor.client.okhttp)
+            implementation("io.coil-kt.coil3:coil-network-okhttp:3.1.0")
         }
 
         commonMain.dependencies {
@@ -80,20 +82,28 @@ kotlin {
             implementation(libs.compose.runtime)
             implementation(libs.kotlin.navigation)
             implementation(libs.ktor.serialization.kotlinx.json)
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
+            implementation("io.coil-kt.coil3:coil-compose:3.1.0")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
         }
+
+        jvmMain.dependencies {
+            implementation("io.ktor:ktor-client-cio:2.3.5")
+        }
     }
 }
 
 android {
-    namespace = "com.worldine.quiz"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    namespace = "com.worldline.quiz"
+    compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.worldine.quiz"
+        applicationId = "com.worldline.quiz"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
@@ -123,11 +133,11 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "com.worldine.quiz.MainKt"
+        mainClass = "com.worldline.quiz.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.worldine.quiz"
+            packageName = "com.worldline.quiz"
             packageVersion = "1.0.0"
         }
     }
